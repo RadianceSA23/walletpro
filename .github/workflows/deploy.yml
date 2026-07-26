@@ -108,6 +108,9 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+ # ============================================
+  # Stage 3: Continuous Deployment to AWS EC2
+  # ============================================
   # ============================================
   # Stage 3: Continuous Deployment to AWS EC2
   # ============================================
