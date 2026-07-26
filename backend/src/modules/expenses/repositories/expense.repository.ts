@@ -6,9 +6,21 @@ import { FilterExpenseDto } from '../dto/filter-expense.dto';
 
 export interface IExpenseRepository {
   create(expenseData: Partial<Expense>): Promise<ExpenseDocument>;
-  findAll(userId: string, filterDto: FilterExpenseDto): Promise<{ expenses: ExpenseDocument[]; total: number; page: number; limit: number }>;
+  findAll(
+    userId: string,
+    filterDto: FilterExpenseDto,
+  ): Promise<{
+    expenses: ExpenseDocument[];
+    total: number;
+    page: number;
+    limit: number;
+  }>;
   findById(id: string, userId: string): Promise<ExpenseDocument | null>;
-  update(id: string, userId: string, updateData: Partial<Expense>): Promise<ExpenseDocument | null>;
+  update(
+    id: string,
+    userId: string,
+    updateData: Partial<Expense>,
+  ): Promise<ExpenseDocument | null>;
   delete(id: string, userId: string): Promise<boolean>;
 }
 
@@ -21,13 +33,21 @@ export class ExpenseRepository implements IExpenseRepository {
 
   async create(expenseData: Partial<Expense>): Promise<ExpenseDocument> {
     const expense = new this.expenseModel(expenseData);
-    return (await expense.save()).populate('categoryId', 'name color icon type');
+    return (await expense.save()).populate(
+      'categoryId',
+      'name color icon type',
+    );
   }
 
   async findAll(
     userId: string,
     filterDto: FilterExpenseDto,
-  ): Promise<{ expenses: ExpenseDocument[]; total: number; page: number; limit: number }> {
+  ): Promise<{
+    expenses: ExpenseDocument[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
     const {
       categoryId,
       search,

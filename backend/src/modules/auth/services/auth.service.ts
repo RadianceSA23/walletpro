@@ -19,8 +19,9 @@ export class AuthService {
   async validateUser(email: string, pass: string): Promise<any> {
     const user = await this.usersService.findByEmail(email);
     if (user && (await bcrypt.compare(pass, user.passwordHash))) {
-      const { passwordHash, ...result } = user.toObject();
-      return result;
+      const userObj = user.toObject();
+      delete userObj.passwordHash;
+      return userObj;
     }
     return null;
   }
@@ -31,7 +32,12 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password credentials');
     }
 
-    return this.generateTokens(user._id.toString(), user.email, user.firstName, user.lastName);
+    return this.generateTokens(
+      user._id.toString(),
+      user.email,
+      user.firstName,
+      user.lastName,
+    );
   }
 
   async register(registerDto: RegisterDto) {
@@ -43,7 +49,12 @@ export class AuthService {
       registerDto.currency || 'USD',
     );
 
-    return this.generateTokens(user._id.toString(), user.email, user.firstName, user.lastName);
+    return this.generateTokens(
+      user._id.toString(),
+      user.email,
+      user.firstName,
+      user.lastName,
+    );
   }
 
   async logout(userId: string) {
@@ -51,16 +62,25 @@ export class AuthService {
     return { message: 'Successfully logged out and revoked refresh tokens' };
   }
 
-  private async generateTokens(userId: string, email: string, firstName: string, lastName: string) {
+  private async generateTokens(
+    userId: string,
+    email: string,
+    firstName: string,
+    lastName: string,
+  ) {
     const payload = { sub: userId, email };
 
     const accessToken = this.jwtService.sign(payload, {
-      secret: this.configService.get<string>('jwt.secret') || 'default_jwt_access_secret',
+      secret:
+        this.configService.get<string>('jwt.secret') ||
+        'default_jwt_access_secret',
       expiresIn: this.configService.get<string>('jwt.expiresIn') || '15m',
     });
 
     const refreshToken = this.jwtService.sign(payload, {
-      secret: this.configService.get<string>('jwt.refreshSecret') || 'default_jwt_refresh_secret',
+      secret:
+        this.configService.get<string>('jwt.refreshSecret') ||
+        'default_jwt_refresh_secret',
       expiresIn: this.configService.get<string>('jwt.refreshExpiresIn') || '7d',
     });
 

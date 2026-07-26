@@ -13,15 +13,23 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: configService.get<string>('jwt.secret') || 'default_jwt_access_secret',
+      secretOrKey:
+        configService.get<string>('jwt.secret') || 'default_jwt_access_secret',
     });
   }
 
   async validate(payload: any) {
     const user = await this.usersService.findById(payload.sub);
     if (!user) {
-      throw new UnauthorizedException('Token credentials invalid or user no longer exists');
+      throw new UnauthorizedException(
+        'Token credentials invalid or user no longer exists',
+      );
     }
-    return { id: user._id.toString(), email: user.email, firstName: user.firstName, lastName: user.lastName };
+    return {
+      id: user._id.toString(),
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+    };
   }
 }

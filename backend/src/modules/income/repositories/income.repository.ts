@@ -6,9 +6,21 @@ import { FilterIncomeDto } from '../dto/filter-income.dto';
 
 export interface IIncomeRepository {
   create(incomeData: Partial<Income>): Promise<IncomeDocument>;
-  findAll(userId: string, filterDto: FilterIncomeDto): Promise<{ incomes: IncomeDocument[]; total: number; page: number; limit: number }>;
+  findAll(
+    userId: string,
+    filterDto: FilterIncomeDto,
+  ): Promise<{
+    incomes: IncomeDocument[];
+    total: number;
+    page: number;
+    limit: number;
+  }>;
   findById(id: string, userId: string): Promise<IncomeDocument | null>;
-  update(id: string, userId: string, updateData: Partial<Income>): Promise<IncomeDocument | null>;
+  update(
+    id: string,
+    userId: string,
+    updateData: Partial<Income>,
+  ): Promise<IncomeDocument | null>;
   softDelete(id: string, userId: string, updatedBy: string): Promise<boolean>;
 }
 
@@ -27,7 +39,12 @@ export class IncomeRepository implements IIncomeRepository {
   async findAll(
     userId: string,
     filterDto: FilterIncomeDto,
-  ): Promise<{ incomes: IncomeDocument[]; total: number; page: number; limit: number }> {
+  ): Promise<{
+    incomes: IncomeDocument[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
     const {
       categoryId,
       search,
@@ -86,7 +103,11 @@ export class IncomeRepository implements IIncomeRepository {
 
   async findById(id: string, userId: string): Promise<IncomeDocument | null> {
     return this.incomeModel
-      .findOne({ _id: id, userId: new Types.ObjectId(userId), isDeleted: false })
+      .findOne({
+        _id: id,
+        userId: new Types.ObjectId(userId),
+        isDeleted: false,
+      })
       .populate('categoryId', 'name color icon type')
       .exec();
   }
@@ -106,7 +127,11 @@ export class IncomeRepository implements IIncomeRepository {
       .exec();
   }
 
-  async softDelete(id: string, userId: string, updatedBy: string): Promise<boolean> {
+  async softDelete(
+    id: string,
+    userId: string,
+    updatedBy: string,
+  ): Promise<boolean> {
     const result = await this.incomeModel
       .updateOne(
         { _id: id, userId: new Types.ObjectId(userId), isDeleted: false },

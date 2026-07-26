@@ -60,9 +60,15 @@ export class IncomeService {
 
   async remove(id: string, userId: string) {
     await this.findOne(id, userId);
-    const softDeleted = await this.incomeRepository.softDelete(id, userId, userId);
+    const softDeleted = await this.incomeRepository.softDelete(
+      id,
+      userId,
+      userId,
+    );
     if (!softDeleted) {
-      throw new NotFoundException(`Income record with ID "${id}" could not be deleted`);
+      throw new NotFoundException(
+        `Income record with ID "${id}" could not be deleted`,
+      );
     }
     return { message: 'Income record soft deleted successfully' };
   }

@@ -1,9 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { Expense, ExpenseDocument } from '../../expenses/schemas/expense.schema';
+import {
+  Expense,
+  ExpenseDocument,
+} from '../../expenses/schemas/expense.schema';
 import { Income, IncomeDocument } from '../../income/schemas/income.schema';
-import { MonthlyReportSummaryDto, YearlyReportSummaryDto, TopCategoryReportItemDto } from '../dto/report-response.dto';
+import {
+  MonthlyReportSummaryDto,
+  YearlyReportSummaryDto,
+  TopCategoryReportItemDto,
+} from '../dto/report-response.dto';
 
 @Injectable()
 export class ReportsService {
@@ -14,18 +21,33 @@ export class ReportsService {
     private readonly incomeModel: Model<IncomeDocument>,
   ) {}
 
-  async getMonthlyReport(userId: string, year: number, month: number): Promise<MonthlyReportSummaryDto> {
+  async getMonthlyReport(
+    userId: string,
+    year: number,
+    month: number,
+  ): Promise<MonthlyReportSummaryDto> {
     const userObjectId = new Types.ObjectId(userId);
     const startDate = new Date(year, month - 1, 1);
     const endDate = new Date(year, month, 0, 23, 59, 59, 999);
 
     const [incomeRes, expenseRes, topCategories] = await Promise.all([
       this.incomeModel.aggregate([
-        { $match: { userId: userObjectId, isDeleted: false, date: { $gte: startDate, $lte: endDate } } },
+        {
+          $match: {
+            userId: userObjectId,
+            isDeleted: false,
+            date: { $gte: startDate, $lte: endDate },
+          },
+        },
         { $group: { _id: null, total: { $sum: '$amount' } } },
       ]),
       this.expenseModel.aggregate([
-        { $match: { userId: userObjectId, date: { $gte: startDate, $lte: endDate } } },
+        {
+          $match: {
+            userId: userObjectId,
+            date: { $gte: startDate, $lte: endDate },
+          },
+        },
         { $group: { _id: null, total: { $sum: '$amount' } } },
       ]),
       this.getTopSpendingCategories(userId, year, month, 5),
@@ -34,7 +56,10 @@ export class ReportsService {
     const totalIncome = incomeRes[0]?.total || 0;
     const totalExpense = expenseRes[0]?.total || 0;
     const netSavings = totalIncome - totalExpense;
-    const savingsRate = totalIncome > 0 ? Number(((netSavings / totalIncome) * 100).toFixed(1)) : 0;
+    const savingsRate =
+      totalIncome > 0
+        ? Number(((netSavings / totalIncome) * 100).toFixed(1))
+        : 0;
 
     return {
       year,
@@ -47,12 +72,26 @@ export class ReportsService {
     };
   }
 
-  async getYearlyReport(userId: string, year: number): Promise<YearlyReportSummaryDto> {
+  async getYearlyReport(
+    userId: string,
+    year: number,
+  ): Promise<YearlyReportSummaryDto> {
     const userObjectId = new Types.ObjectId(userId);
-    const startDate = new Date(year, 0, 1);
-    const endDate = new Date(year, 11, 31, 23, 59, 59, 999);
 
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const monthNames = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
     const monthlyBreakdown = [];
 
     let annualIncome = 0;
@@ -64,11 +103,22 @@ export class ReportsService {
 
       const [incAggr, expAggr] = await Promise.all([
         this.incomeModel.aggregate([
-          { $match: { userId: userObjectId, isDeleted: false, date: { $gte: mStart, $lte: mEnd } } },
+          {
+            $match: {
+              userId: userObjectId,
+              isDeleted: false,
+              date: { $gte: mStart, $lte: mEnd },
+            },
+          },
           { $group: { _id: null, total: { $sum: '$amount' } } },
         ]),
         this.expenseModel.aggregate([
-          { $match: { userId: userObjectId, date: { $gte: mStart, $lte: mEnd } } },
+          {
+            $match: {
+              userId: userObjectId,
+              date: { $gte: mStart, $lte: mEnd },
+            },
+          },
           { $group: { _id: null, total: { $sum: '$amount' } } },
         ]),
       ]);
@@ -154,11 +204,19 @@ export class ReportsService {
       icon: item.category.icon,
       totalAmount: item.totalAmount,
       transactionCount: item.transactionCount,
-      percentage: totalSpent > 0 ? Number(((item.totalAmount / totalSpent) * 100).toFixed(1)) : 0,
+      percentage:
+        totalSpent > 0
+          ? Number(((item.totalAmount / totalSpent) * 100).toFixed(1))
+          : 0,
     }));
   }
 
-  async generateCSV(userId: string, type: 'expenses' | 'income', year: number, month?: number): Promise<string> {
+  async generateCSV(
+    userId: string,
+    type: 'expenses' | 'income',
+    year: number,
+    month?: number,
+  ): Promise<string> {
     const userObjectId = new Types.ObjectId(userId);
     const matchQuery: any = { userId: userObjectId };
 

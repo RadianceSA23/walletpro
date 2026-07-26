@@ -50,7 +50,9 @@ async function bootstrap() {
   // Swagger Documentation Setup
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Enterprise Expense Tracker SaaS API')
-    .setDescription('Production-grade RESTful API documentation for Expense Tracker SaaS platform.')
+    .setDescription(
+      'Production-grade RESTful API documentation for Expense Tracker SaaS platform.',
+    )
     .setVersion('1.0')
     .addBearerAuth(
       {
@@ -70,7 +72,9 @@ async function bootstrap() {
 
   await app.listen(port);
   logger.log(`🚀 Expense Tracker API Gateway executing on port: ${port}`);
-  logger.log(`📚 Swagger API Documentation available at: http://localhost:${port}/api/docs`);
+  logger.log(
+    `📚 Swagger API Documentation available at: http://localhost:${port}/api/docs`,
+  );
 }
 
 bootstrap();

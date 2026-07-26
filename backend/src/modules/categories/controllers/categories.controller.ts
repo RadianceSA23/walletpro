@@ -10,7 +10,12 @@ import {
   UseGuards,
   Request,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { CategoriesService } from '../services/categories.service';
 import { CreateCategoryDto } from '../dto/create-category.dto';
 import { UpdateCategoryDto } from '../dto/update-category.dto';
@@ -34,8 +39,13 @@ export class CategoriesController {
 
   @UseGuards(JwtAuthGuard)
   @Get()
-  @ApiOperation({ summary: 'List all available categories (System + User Custom)' })
-  @ApiResponse({ status: 200, description: 'Categorized list returned successfully' })
+  @ApiOperation({
+    summary: 'List all available categories (System + User Custom)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Categorized list returned successfully',
+  })
   findAll(@Request() req: any, @Query() filterDto: FilterCategoryDto) {
     const userId = req.user?.id || req.user?._id;
     return this.categoriesService.findAll(userId, filterDto);

@@ -1,7 +1,10 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserSchema } from '../users/schemas/user.schema';
-import { Category, CategorySchema } from '../categories/schemas/category.schema';
+import {
+  Category,
+  CategorySchema,
+} from '../categories/schemas/category.schema';
 import { Expense, ExpenseSchema } from '../expenses/schemas/expense.schema';
 import { Income, IncomeSchema } from '../income/schemas/income.schema';
 import { SeedService } from './seed.service';

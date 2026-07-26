@@ -37,7 +37,11 @@ export class CategoriesService implements OnModuleInit {
     return category;
   }
 
-  async update(id: string, userId: string, updateCategoryDto: UpdateCategoryDto) {
+  async update(
+    id: string,
+    userId: string,
+    updateCategoryDto: UpdateCategoryDto,
+  ) {
     const category = await this.findOne(id);
 
     if (category.isSystem) {
@@ -45,10 +49,16 @@ export class CategoriesService implements OnModuleInit {
     }
 
     if (category.userId.toString() !== userId) {
-      throw new ForbiddenException('You do not have permission to modify this category');
+      throw new ForbiddenException(
+        'You do not have permission to modify this category',
+      );
     }
 
-    const updatedCategory = await this.categoryRepository.update(id, userId, updateCategoryDto);
+    const updatedCategory = await this.categoryRepository.update(
+      id,
+      userId,
+      updateCategoryDto,
+    );
     return updatedCategory;
   }
 
@@ -60,12 +70,16 @@ export class CategoriesService implements OnModuleInit {
     }
 
     if (category.userId.toString() !== userId) {
-      throw new ForbiddenException('You do not have permission to delete this category');
+      throw new ForbiddenException(
+        'You do not have permission to delete this category',
+      );
     }
 
     const deleted = await this.categoryRepository.delete(id, userId);
     if (!deleted) {
-      throw new NotFoundException(`Category with ID "${id}" could not be deleted`);
+      throw new NotFoundException(
+        `Category with ID "${id}" could not be deleted`,
+      );
     }
 
     return { message: 'Category deleted successfully' };

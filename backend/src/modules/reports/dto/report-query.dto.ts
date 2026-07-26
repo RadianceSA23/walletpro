@@ -11,7 +11,10 @@ export class ReportQueryDto {
   @Max(2100)
   year?: number = new Date().getFullYear();
 
-  @ApiPropertyOptional({ description: 'Filter report by month (1 - 12)', example: 7 })
+  @ApiPropertyOptional({
+    description: 'Filter report by month (1 - 12)',
+    example: 7,
+  })
   @IsOptional()
   @Type(() => Number)
   @IsInt()

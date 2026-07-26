@@ -1,5 +1,10 @@
 import { Controller, Get, UseGuards, Request } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { DashboardService } from '../services/dashboard.service';
 import { DashboardSummaryResponseDto } from '../dto/dashboard-summary.dto';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
@@ -12,7 +17,9 @@ export class DashboardController {
 
   @UseGuards(JwtAuthGuard)
   @Get('summary')
-  @ApiOperation({ summary: 'Get optimized dashboard metrics, breakdown, and trend analytics' })
+  @ApiOperation({
+    summary: 'Get optimized dashboard metrics, breakdown, and trend analytics',
+  })
   @ApiResponse({
     status: 200,
     description: 'Dashboard metrics returned successfully',

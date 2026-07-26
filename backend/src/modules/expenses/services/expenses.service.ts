@@ -57,7 +57,9 @@ export class ExpensesService {
     await this.findOne(id, userId);
     const deleted = await this.expenseRepository.delete(id, userId);
     if (!deleted) {
-      throw new NotFoundException(`Expense with ID "${id}" could not be deleted`);
+      throw new NotFoundException(
+        `Expense with ID "${id}" could not be deleted`,
+      );
     }
     return { message: 'Expense record deleted successfully' };
   }

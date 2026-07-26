@@ -10,7 +10,12 @@ import {
   UseGuards,
   Request,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { ExpensesService } from '../services/expenses.service';
 import { CreateExpenseDto } from '../dto/create-expense.dto';
 import { UpdateExpenseDto } from '../dto/update-expense.dto';
@@ -34,7 +39,9 @@ export class ExpensesController {
 
   @UseGuards(JwtAuthGuard)
   @Get()
-  @ApiOperation({ summary: 'List user expenses with filtering, search, and pagination' })
+  @ApiOperation({
+    summary: 'List user expenses with filtering, search, and pagination',
+  })
   @ApiResponse({ status: 200, description: 'Expense records list' })
   findAll(@Request() req: any, @Query() filterDto: FilterExpenseDto) {
     const userId = req.user?.id || req.user?._id;

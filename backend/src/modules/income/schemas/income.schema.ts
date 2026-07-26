@@ -49,4 +49,9 @@ export const IncomeSchema = SchemaFactory.createForClass(Income);
 // Compound performance & filtering indexes
 IncomeSchema.index({ userId: 1, isDeleted: 1, date: -1 });
 IncomeSchema.index({ userId: 1, categoryId: 1, isDeleted: 1 });
-IncomeSchema.index({ userId: 1, title: 'text', description: 'text', source: 'text' });
+IncomeSchema.index({
+  userId: 1,
+  title: 'text',
+  description: 'text',
+  source: 'text',
+});

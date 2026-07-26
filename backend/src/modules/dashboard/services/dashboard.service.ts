@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { Expense, ExpenseDocument } from '../../expenses/schemas/expense.schema';
+import {
+  Expense,
+  ExpenseDocument,
+} from '../../expenses/schemas/expense.schema';
 import { Income, IncomeDocument } from '../../income/schemas/income.schema';
 import { DashboardSummaryResponseDto } from '../dto/dashboard-summary.dto';
 
@@ -18,11 +21,31 @@ export class DashboardService {
     const userObjectId = new Types.ObjectId(userId);
 
     const now = new Date();
-    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+    const startOfToday = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+    );
+    const endOfToday = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+      23,
+      59,
+      59,
+      999,
+    );
 
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+    const endOfMonth = new Date(
+      now.getFullYear(),
+      now.getMonth() + 1,
+      0,
+      23,
+      59,
+      59,
+      999,
+    );
 
     // Parallel aggregation execution
     const [
@@ -49,22 +72,44 @@ export class DashboardService {
       ]),
       // Today Income
       this.incomeModel.aggregate([
-        { $match: { userId: userObjectId, isDeleted: false, date: { $gte: startOfToday, $lte: endOfToday } } },
+        {
+          $match: {
+            userId: userObjectId,
+            isDeleted: false,
+            date: { $gte: startOfToday, $lte: endOfToday },
+          },
+        },
         { $group: { _id: null, total: { $sum: '$amount' } } },
       ]),
       // Today Expense
       this.expenseModel.aggregate([
-        { $match: { userId: userObjectId, date: { $gte: startOfToday, $lte: endOfToday } } },
+        {
+          $match: {
+            userId: userObjectId,
+            date: { $gte: startOfToday, $lte: endOfToday },
+          },
+        },
         { $group: { _id: null, total: { $sum: '$amount' } } },
       ]),
       // Monthly Income
       this.incomeModel.aggregate([
-        { $match: { userId: userObjectId, isDeleted: false, date: { $gte: startOfMonth, $lte: endOfMonth } } },
+        {
+          $match: {
+            userId: userObjectId,
+            isDeleted: false,
+            date: { $gte: startOfMonth, $lte: endOfMonth },
+          },
+        },
         { $group: { _id: null, total: { $sum: '$amount' } } },
       ]),
       // Monthly Expense
       this.expenseModel.aggregate([
-        { $match: { userId: userObjectId, date: { $gte: startOfMonth, $lte: endOfMonth } } },
+        {
+          $match: {
+            userId: userObjectId,
+            date: { $gte: startOfMonth, $lte: endOfMonth },
+          },
+        },
         { $group: { _id: null, total: { $sum: '$amount' } } },
       ]),
       // Expense By Category Aggregation
@@ -130,7 +175,10 @@ export class DashboardService {
       color: item.category.color,
       icon: item.category.icon,
       totalAmount: item.totalAmount,
-      percentage: totalExpense > 0 ? Number(((item.totalAmount / totalExpense) * 100).toFixed(1)) : 0,
+      percentage:
+        totalExpense > 0
+          ? Number(((item.totalAmount / totalExpense) * 100).toFixed(1))
+          : 0,
     }));
 
     const incomeByCategory = incomeByCategoryRes.map((item) => ({
@@ -139,7 +187,10 @@ export class DashboardService {
       color: item.category.color,
       icon: item.category.icon,
       totalAmount: item.totalAmount,
-      percentage: totalIncome > 0 ? Number(((item.totalAmount / totalIncome) * 100).toFixed(1)) : 0,
+      percentage:
+        totalIncome > 0
+          ? Number(((item.totalAmount / totalIncome) * 100).toFixed(1))
+          : 0,
     }));
 
     // Combine and sort recent transactions
@@ -168,20 +219,52 @@ export class DashboardService {
 
     // Calculate Monthly Trend for last 6 months
     const monthlyTrend = [];
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const monthNames = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
 
     for (let i = 5; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const mStart = new Date(d.getFullYear(), d.getMonth(), 1);
-      const mEnd = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999);
+      const mEnd = new Date(
+        d.getFullYear(),
+        d.getMonth() + 1,
+        0,
+        23,
+        59,
+        59,
+        999,
+      );
 
       const [incAggr, expAggr] = await Promise.all([
         this.incomeModel.aggregate([
-          { $match: { userId: userObjectId, isDeleted: false, date: { $gte: mStart, $lte: mEnd } } },
+          {
+            $match: {
+              userId: userObjectId,
+              isDeleted: false,
+              date: { $gte: mStart, $lte: mEnd },
+            },
+          },
           { $group: { _id: null, total: { $sum: '$amount' } } },
         ]),
         this.expenseModel.aggregate([
-          { $match: { userId: userObjectId, date: { $gte: mStart, $lte: mEnd } } },
+          {
+            $match: {
+              userId: userObjectId,
+              date: { $gte: mStart, $lte: mEnd },
+            },
+          },
           { $group: { _id: null, total: { $sum: '$amount' } } },
         ]),
       ]);

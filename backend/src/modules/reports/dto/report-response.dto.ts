@@ -57,5 +57,10 @@ export class YearlyReportSummaryDto {
   netSavings: number;
 
   @ApiProperty({ description: 'Monthly breakdown timeline' })
-  monthlyBreakdown: Array<{ month: string; income: number; expense: number; savings: number }>;
+  monthlyBreakdown: Array<{
+    month: string;
+    income: number;
+    expense: number;
+    savings: number;
+  }>;
 }

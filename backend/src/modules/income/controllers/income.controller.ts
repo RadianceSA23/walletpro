@@ -10,7 +10,12 @@ import {
   UseGuards,
   Request,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { IncomeService } from '../services/income.service';
 import { CreateIncomeDto } from '../dto/create-income.dto';
 import { UpdateIncomeDto } from '../dto/update-income.dto';
@@ -34,7 +39,9 @@ export class IncomeController {
 
   @UseGuards(JwtAuthGuard)
   @Get()
-  @ApiOperation({ summary: 'List user income records with filtering, search, and pagination' })
+  @ApiOperation({
+    summary: 'List user income records with filtering, search, and pagination',
+  })
   @ApiResponse({ status: 200, description: 'Income records list' })
   findAll(@Request() req: any, @Query() filterDto: FilterIncomeDto) {
     const userId = req.user?.id || req.user?._id;
@@ -67,7 +74,10 @@ export class IncomeController {
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
   @ApiOperation({ summary: 'Soft delete income record' })
-  @ApiResponse({ status: 200, description: 'Income record soft deleted successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Income record soft deleted successfully',
+  })
   remove(@Param('id') id: string, @Request() req: any) {
     const userId = req.user?.id || req.user?._id;
     return this.incomeService.remove(id, userId);

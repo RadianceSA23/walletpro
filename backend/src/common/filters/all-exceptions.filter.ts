@@ -29,7 +29,10 @@ export class AllExceptionsFilter implements ExceptionFilter {
     if (exceptionResponse) {
       if (typeof exceptionResponse === 'string') {
         message = exceptionResponse;
-      } else if (typeof exceptionResponse === 'object' && exceptionResponse.message) {
+      } else if (
+        typeof exceptionResponse === 'object' &&
+        exceptionResponse.message
+      ) {
         message = exceptionResponse.message;
       }
     } else if (exception instanceof Error) {
@@ -44,7 +47,10 @@ export class AllExceptionsFilter implements ExceptionFilter {
     response.status(status).json({
       success: false,
       statusCode: status,
-      error: exception instanceof HttpException ? exception.name : 'InternalServerError',
+      error:
+        exception instanceof HttpException
+          ? exception.name
+          : 'InternalServerError',
       message: Array.isArray(message) ? message : [message],
       timestamp: new Date().toISOString(),
       path: request.url,

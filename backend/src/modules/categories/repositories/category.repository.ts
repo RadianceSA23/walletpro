@@ -1,14 +1,30 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { Category, CategoryDocument, CategoryType } from '../schemas/category.schema';
+import {
+  Category,
+  CategoryDocument,
+  CategoryType,
+} from '../schemas/category.schema';
 import { FilterCategoryDto } from '../dto/filter-category.dto';
 
 export interface ICategoryRepository {
   create(categoryData: Partial<Category>): Promise<CategoryDocument>;
-  findAll(userId: string, filterDto: FilterCategoryDto): Promise<{ categories: CategoryDocument[]; total: number; page: number; limit: number }>;
+  findAll(
+    userId: string,
+    filterDto: FilterCategoryDto,
+  ): Promise<{
+    categories: CategoryDocument[];
+    total: number;
+    page: number;
+    limit: number;
+  }>;
   findById(id: string): Promise<CategoryDocument | null>;
-  update(id: string, userId: string, updateData: Partial<Category>): Promise<CategoryDocument | null>;
+  update(
+    id: string,
+    userId: string,
+    updateData: Partial<Category>,
+  ): Promise<CategoryDocument | null>;
   delete(id: string, userId: string): Promise<boolean>;
   seedSystemDefaults(): Promise<void>;
 }
@@ -28,15 +44,17 @@ export class CategoryRepository implements ICategoryRepository {
   async findAll(
     userId: string,
     filterDto: FilterCategoryDto,
-  ): Promise<{ categories: CategoryDocument[]; total: number; page: number; limit: number }> {
+  ): Promise<{
+    categories: CategoryDocument[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
     const { type, search, page = 1, limit = 20 } = filterDto;
 
     // Fetch categories belonging to the user OR system categories
     const query: any = {
-      $or: [
-        { userId: new Types.ObjectId(userId) },
-        { isSystem: true },
-      ],
+      $or: [{ userId: new Types.ObjectId(userId) }, { isSystem: true }],
     };
 
     if (type) {
@@ -82,29 +100,95 @@ export class CategoryRepository implements ICategoryRepository {
 
   async delete(id: string, userId: string): Promise<boolean> {
     const result = await this.categoryModel
-      .deleteOne({ _id: id, userId: new Types.ObjectId(userId), isSystem: false })
+      .deleteOne({
+        _id: id,
+        userId: new Types.ObjectId(userId),
+        isSystem: false,
+      })
       .exec();
     return result.deletedCount > 0;
   }
 
   async seedSystemDefaults(): Promise<void> {
-    const count = await this.categoryModel.countDocuments({ isSystem: true }).exec();
+    const count = await this.categoryModel
+      .countDocuments({ isSystem: true })
+      .exec();
     if (count > 0) return;
 
     const defaultCategories: Partial<Category>[] = [
       // Income Categories
-      { name: 'Salary', type: CategoryType.INCOME, color: '#10B981', icon: 'wallet', isSystem: true },
-      { name: 'Freelance & Business', type: CategoryType.INCOME, color: '#3B82F6', icon: 'briefcase', isSystem: true },
-      { name: 'Investments', type: CategoryType.INCOME, color: '#8B5CF6', icon: 'trending-up', isSystem: true },
-      { name: 'Other Income', type: CategoryType.INCOME, color: '#6B7280', icon: 'plus-circle', isSystem: true },
+      {
+        name: 'Salary',
+        type: CategoryType.INCOME,
+        color: '#10B981',
+        icon: 'wallet',
+        isSystem: true,
+      },
+      {
+        name: 'Freelance & Business',
+        type: CategoryType.INCOME,
+        color: '#3B82F6',
+        icon: 'briefcase',
+        isSystem: true,
+      },
+      {
+        name: 'Investments',
+        type: CategoryType.INCOME,
+        color: '#8B5CF6',
+        icon: 'trending-up',
+        isSystem: true,
+      },
+      {
+        name: 'Other Income',
+        type: CategoryType.INCOME,
+        color: '#6B7280',
+        icon: 'plus-circle',
+        isSystem: true,
+      },
 
       // Expense Categories
-      { name: 'Housing & Rent', type: CategoryType.EXPENSE, color: '#EF4444', icon: 'home', isSystem: true },
-      { name: 'Food & Dining', type: CategoryType.EXPENSE, color: '#F59E0B', icon: 'utensils', isSystem: true },
-      { name: 'Transportation', type: CategoryType.EXPENSE, color: '#06B6D4', icon: 'car', isSystem: true },
-      { name: 'Utilities & Bills', type: CategoryType.EXPENSE, color: '#EC4899', icon: 'zap', isSystem: true },
-      { name: 'Entertainment', type: CategoryType.EXPENSE, color: '#84CC16', icon: 'film', isSystem: true },
-      { name: 'Shopping', type: CategoryType.EXPENSE, color: '#D946EF', icon: 'shopping-bag', isSystem: true },
+      {
+        name: 'Housing & Rent',
+        type: CategoryType.EXPENSE,
+        color: '#EF4444',
+        icon: 'home',
+        isSystem: true,
+      },
+      {
+        name: 'Food & Dining',
+        type: CategoryType.EXPENSE,
+        color: '#F59E0B',
+        icon: 'utensils',
+        isSystem: true,
+      },
+      {
+        name: 'Transportation',
+        type: CategoryType.EXPENSE,
+        color: '#06B6D4',
+        icon: 'car',
+        isSystem: true,
+      },
+      {
+        name: 'Utilities & Bills',
+        type: CategoryType.EXPENSE,
+        color: '#EC4899',
+        icon: 'zap',
+        isSystem: true,
+      },
+      {
+        name: 'Entertainment',
+        type: CategoryType.EXPENSE,
+        color: '#84CC16',
+        icon: 'film',
+        isSystem: true,
+      },
+      {
+        name: 'Shopping',
+        type: CategoryType.EXPENSE,
+        color: '#D946EF',
+        icon: 'shopping-bag',
+        isSystem: true,
+      },
     ];
 
     await this.categoryModel.insertMany(defaultCategories);
