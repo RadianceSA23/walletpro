@@ -1,0 +1,154 @@
+name: Enterprise CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  AWS_REGION: us-east-1
+  ECR_BACKEND_REPOSITORY: expense-tracker-backend
+  ECR_FRONTEND_REPOSITORY: expense-tracker-frontend
+
+jobs:
+  # ============================================
+  # Stage 1: Quality Gate (Backend & Frontend)
+  # ============================================
+  quality-gate-backend:
+    name: Backend Lint & Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install Backend Dependencies
+        run: cd backend && npm ci
+
+      - name: Run Backend Linting
+        run: cd backend && npm run lint
+
+      - name: Run Backend Tests
+        run: cd backend && npm test
+
+  quality-gate-frontend:
+    name: Frontend Lint & Type Checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Frontend Dependencies
+        run: cd frontend && npm ci --legacy-peer-deps
+
+      - name: Run Frontend Type Check & Build
+        run: cd frontend && npm run build
+
+  # ============================================
+  # Stage 2: Docker Build & AWS ECR Registry Push
+  # ============================================
+  build-and-push-ecr:
+    name: Build & Push Docker Images to AWS ECR
+    needs: [quality-gate-backend, quality-gate-frontend]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Log in to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build & Push Backend Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          tags: |
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_BACKEND_REPOSITORY }}:${{ github.sha }}
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_BACKEND_REPOSITORY }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build & Push Frontend Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: true
+          tags: |
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_FRONTEND_REPOSITORY }}:${{ github.sha }}
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_FRONTEND_REPOSITORY }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ============================================
+  # Stage 3: Continuous Deployment to AWS EC2
+  # ============================================
+  deploy-to-ec2:
+    name: Deploy Containerized Application to AWS EC2
+    needs: [build-and-push-ecr]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH & Execute Container Deployment on AWS EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            set -e
+            echo "🚀 Deploying commit ${{ github.sha }} to AWS EC2..."
+
+            # Authenticate EC2 Docker daemon with AWS ECR
+            aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
+
+            cd /home/${{ secrets.EC2_USERNAME }}/app
+
+            # Pull latest containers
+            docker compose pull
+
+            # Re-create containers with zero downtime rolling update
+            docker compose up -d --remove-orphans
+
+            # Health Check Verification
+            echo "🔍 Verifying deployment health status..."
+            for i in {1..10}; do
+              if curl -s http://localhost:5000/api/v1/health | grep -q '"status":"ok"'; then
+                echo "✅ Deployment health verification PASSED!"
+                exit 0
+              fi
+              echo "Waiting for backend container health check... ($i/10)"
+              sleep 5
+            done
+
+            echo "❌ Health check FAILED! Executing automatic rollback to previous container tag..."
+            docker compose rollback || docker compose up -d
+            exit 1
